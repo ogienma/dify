@@ -162,10 +162,12 @@ class KnowledgeRetrievalNode(BaseNode):
             document_score_list = {}
             page_number_list = {}
             for item in all_documents:
-                if item.metadata.get("score"):
-                    document_score_list[item.metadata["doc_id"]] = item.metadata["score"]
-
-            index_node_ids = [document.metadata["doc_id"] for document in all_documents]
+                if item.metadata.get('score'):
+                    document_score_list[item.metadata['doc_id']] = item.metadata['score']
+                # both 'page' and 'score' are metadata fields
+                if item.metadata.get('page'):
+                    page_number_list[item.metadata['doc_id']] = item.metadata['page']
+            index_node_ids = [document.metadata['doc_id'] for document in all_documents]
             segments = DocumentSegment.query.filter(
                 DocumentSegment.dataset_id.in_(dataset_ids),
                 DocumentSegment.completed_at.isnot(None),
