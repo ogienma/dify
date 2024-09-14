@@ -76,10 +76,12 @@ class DatasetMultiRetrieverTool(DatasetRetrieverBaseTool):
             hit_callback.on_tool_end(all_documents)
 
         document_score_list = {}
+        page_number_list = {}
         for item in all_documents:
             if item.metadata.get("score"):
                 document_score_list[item.metadata["doc_id"]] = item.metadata["score"]
-
+            if item.metadata.get('page'):
+                page_number_list[item.metadata['doc_id']] = item.metadata['page']
         document_context_list = []
         index_node_ids = [document.metadata["doc_id"] for document in all_documents]
         segments = DocumentSegment.query.filter(
@@ -118,6 +120,7 @@ class DatasetMultiRetrieverTool(DatasetRetrieverBaseTool):
                             "document_id": document.id,
                             "document_name": document.name,
                             "data_source_type": document.data_source_type,
+                             'page': page_number_list.get(segment.index_node_id, None),
                             "segment_id": segment.id,
                             "retriever_from": self.retriever_from,
                             "score": document_score_list.get(segment.index_node_id, None),
@@ -165,7 +168,10 @@ class DatasetMultiRetrieverTool(DatasetRetrieverBaseTool):
             if dataset.indexing_technique == "economy":
                 # use keyword table query
                 documents = RetrievalService.retrieve(
-                    retrieval_method="keyword_search", dataset_id=dataset.id, query=query, top_k=self.top_k
+                    retrieval_method="keyword_search",
+                    dataset_id=dataset.id,
+                    query=query,
+                    top_k=retrieval_model.get("top_k") or 2,
                 )
                 if documents:
                     all_documents.extend(documents)
@@ -176,7 +182,7 @@ class DatasetMultiRetrieverTool(DatasetRetrieverBaseTool):
                         retrieval_method=retrieval_model["search_method"],
                         dataset_id=dataset.id,
                         query=query,
-                        top_k=self.top_k,
+                        top_k=retrieval_model.get("top_k") or 2,
                         score_threshold=retrieval_model.get("score_threshold", 0.0)
                         if retrieval_model["score_threshold_enabled"]
                         else 0.0,
