@@ -125,10 +125,13 @@ class DatasetRetrieverTool(DatasetRetrieverBaseTool):
                 for hit_callback in self.hit_callbacks:
                     hit_callback.on_tool_end(documents)
                 document_score_list = {}
+                page_number_list = {}
                 if dataset.indexing_technique != "economy":
                     for item in documents:
                         if item.metadata.get("score"):
                             document_score_list[item.metadata["doc_id"]] = item.metadata["score"]
+                        if item.metadata.get("page"):
+                            page_number_list[item.metadata["doc_id"]] = item.metadata["page"]
                 document_context_list = []
                 index_node_ids = [document.metadata["doc_id"] for document in documents]
                 segments = DocumentSegment.query.filter(
@@ -169,6 +172,7 @@ class DatasetRetrieverTool(DatasetRetrieverBaseTool):
                                     "document_id": document.id,
                                     "document_name": document.name,
                                     "data_source_type": document.data_source_type,
+                                    "page": page_number_list.get(segment.index_node_id, None),
                                     "segment_id": segment.id,
                                     "retriever_from": self.retriever_from,
                                     "score": document_score_list.get(segment.index_node_id, None),
