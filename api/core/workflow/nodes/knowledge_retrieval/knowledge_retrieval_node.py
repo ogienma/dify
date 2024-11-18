@@ -196,10 +196,12 @@ class KnowledgeRetrievalNode(BaseNode[KnowledgeRetrievalNodeData]):
         # deal with dify documents
         if dify_documents:
             document_score_list = {}
+            page_number_list = {}
             for item in dify_documents:
                 if item.metadata.get("score"):
                     document_score_list[item.metadata["doc_id"]] = item.metadata["score"]
-
+                if item.metadata.get("page"):
+                    page_number_list[item.metadata["doc_id"]] = item.metadata["page"]
             index_node_ids = [document.metadata["doc_id"] for document in dify_documents]
             segments = DocumentSegment.query.filter(
                 DocumentSegment.dataset_id.in_(dataset_ids),
@@ -230,6 +232,7 @@ class KnowledgeRetrievalNode(BaseNode[KnowledgeRetrievalNodeData]):
                                 "document_id": document.id,
                                 "document_name": document.name,
                                 "document_data_source_type": document.data_source_type,
+                                "page": page_number_list.get(segment.index_node_id, None),
                                 "segment_id": segment.id,
                                 "retriever_from": "workflow",
                                 "score": document_score_list.get(segment.index_node_id, None),
